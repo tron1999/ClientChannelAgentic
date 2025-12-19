@@ -927,7 +927,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function sendMessage() {
         const text = messageInput.value.trim();
         
-        if (!text || !isConnected || !activeChatSession) return;
+        if (!text || !isConnected) return;
+        
+        // If session was ended, restart it when user sends a message
+        if (!activeChatSession) {
+            activeChatSession = true;
+            showStatus('Chat session resumed');
+        }
         
         // Make sure we have a customerId before sending
         if (!customerId) {
@@ -1415,9 +1421,8 @@ document.addEventListener('DOMContentLoaded', () => {
         activeChatSession = false;
         showStatus('Chat session ended');
         
-        // Disable message input
-        messageInput.disabled = true;
-        sendButton.disabled = true;
+        // Keep input enabled - user can still type and send messages
+        // Note: activeChatSession flag will prevent message sending, but input remains usable
     }
 
     // Simulate a CSR response
@@ -1718,13 +1723,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         messageInput.placeholder = placeholders[messageType] || 'Type your message here...';
         
-        // Disable input for certain message types
-        if (messageType === 'typing_indicator' || messageType === 'customer_end_session') {
-            messageInput.disabled = true;
-            messageInput.style.opacity = '0.6';
-        } else {
-            messageInput.disabled = false;
-            messageInput.style.opacity = '1';
-        }
+        // Keep input always enabled - user can always type
+        messageInput.disabled = false;
+        messageInput.style.opacity = '1';
     }
 }); 
