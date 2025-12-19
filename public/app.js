@@ -34,6 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearApiLogs = document.getElementById('clearApiLogs');
     const apiLogToggleIcon = document.getElementById('apiLogToggleIcon');
     
+    // Sidebar elements
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarToggleMobile = document.getElementById('sidebarToggleMobile');
+    const sidebarToggleIcon = document.getElementById('sidebarToggleIcon');
+    
     // API Logging state
     const apiLogs = [];
     const MAX_API_LOGS = 100;
@@ -69,6 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Setup API log panel
         setupApiLogPanel();
+        
+        // Setup sidebar panel
+        setupSidebarPanel();
         
         // Update input placeholder based on default message type
         updateInputPlaceholder();
@@ -309,6 +318,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.stopPropagation();
                 clearApiLogsList();
             });
+        }
+        
+        // Sidebar toggle controls
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleSidebar();
+            });
+        }
+        
+        if (sidebarToggleMobile) {
+            sidebarToggleMobile.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleSidebar();
+            });
+        }
+    }
+    
+    // Toggle Sidebar
+    function toggleSidebar() {
+        if (!sidebar) return;
+        
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        
+        if (isCollapsed) {
+            sidebar.classList.remove('collapsed');
+            if (sidebarToggleIcon) {
+                sidebarToggleIcon.classList.remove('fa-chevron-right');
+                sidebarToggleIcon.classList.add('fa-chevron-left');
+            }
+            localStorage.setItem('sidebarCollapsed', 'false');
+        } else {
+            sidebar.classList.add('collapsed');
+            if (sidebarToggleIcon) {
+                sidebarToggleIcon.classList.remove('fa-chevron-left');
+                sidebarToggleIcon.classList.add('fa-chevron-right');
+            }
+            localStorage.setItem('sidebarCollapsed', 'true');
+        }
+    }
+    
+    // Setup Sidebar Panel
+    function setupSidebarPanel() {
+        const savedState = localStorage.getItem('sidebarCollapsed');
+        if (savedState === 'true' && sidebar) {
+            sidebar.classList.add('collapsed');
+            if (sidebarToggleIcon) {
+                sidebarToggleIcon.classList.remove('fa-chevron-left');
+                sidebarToggleIcon.classList.add('fa-chevron-right');
+            }
         }
     }
     

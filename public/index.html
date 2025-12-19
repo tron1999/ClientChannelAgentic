@@ -10,8 +10,13 @@
 </head>
 <body>
     <div class="app-container">
-        <div class="sidebar">
-            <h1>Client Channel API Playground</h1>
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>Client Channel API Playground</h1>
+                <button class="btn-icon sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">
+                    <i class="fas fa-chevron-left" id="sidebarToggleIcon"></i>
+                </button>
+            </div>
             
             <div class="configuration-panel">
                 <h2>Configuration</h2>
@@ -96,17 +101,23 @@
             </div>
         </div>
         
-        <div class="chat-container">
-            <div class="chat-header">
-                <h2>Chat Session</h2>
-                <div class="chat-actions">
-                    <button class="btn clear-chat">
-                        <i class="fas fa-broom"></i> Clear Chat
-                    </button>
-                    <button class="btn end-session">End Session</button>
-                    <button class="btn simulate-csr">Simulate CSR Response</button>
-                </div>
-            </div>
+        <div class="iphone-frame">
+            <div class="iphone-notch"></div>
+            <div class="iphone-screen">
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <button class="btn-icon sidebar-toggle-mobile" id="sidebarToggleMobile" title="Toggle sidebar">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <h2>Chat Session</h2>
+                        <div class="chat-actions">
+                            <button class="btn clear-chat">
+                                <i class="fas fa-broom"></i> Clear Chat
+                            </button>
+                            <button class="btn end-session">End Session</button>
+                            <button class="btn simulate-csr">Simulate CSR Response</button>
+                        </div>
+                    </div>
             
             <div class="messages-container" id="messagesContainer">
                 <div class="chat-status">Chat session started. Send a message to begin.</div>
@@ -138,6 +149,8 @@
                     <label for="typingCheckbox">
                         <input type="checkbox" id="typingCheckbox"> Show Typing
                     </label>
+                </div>
+            </div>
                 </div>
             </div>
         </div>
