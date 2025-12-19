@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Channel API Playground</title>
+    <link rel="stylesheet" href="styles.css?v=1.1">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <h1>Client Channel API Playground</h1>
+            
+            <div class="configuration-panel">
+                <h2>Configuration</h2>
+                <form id="configForm">
+                    <div class="form-group customer-id-field">
+                        <label for="customerId">⚠️ CUSTOMER ID ⚠️ <small>(required)</small></label>
+                        <input type="text" id="customerId" name="customerId" placeholder="Enter a permanent customer ID">
+                        <small class="form-hint">This ID must be set for messages to work properly</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="connectionId">Connection ID</label>
+                        <input type="text" id="connectionId" name="connectionId" placeholder="Enter your Channel ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="jwtSecret">JWT Secret</label>
+                        <input type="password" id="jwtSecret" name="jwtSecret" placeholder="Enter your JWT Secret">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientWebhookUrl">Client Webhook URL</label>
+                        <input type="text" id="clientWebhookUrl" name="clientWebhookUrl" placeholder="https://your-webhook-url.com" readonly>
+                        <small class="form-hint">Auto-generated from the current URL. Cannot be modified.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="apiUrl">Digital Messaging URL</label>
+                        <input type="text" id="apiUrl" name="apiUrl" placeholder="https://incoming.artemis.pega.digital/messages">
+                    </div>
+                    <button type="submit" class="btn save-config">Save Config</button>
+                </form>
+            </div>
+            
+            <div class="status-panel">
+                <h2>Status</h2>
+                <div class="status-indicator">
+                    <span class="status-dot disconnected"></span>
+                    <span class="status-text">Disconnected</span>
+                    <button class="btn ping-dms" id="pingButton" style="margin-left: auto;">
+                        <i class="fas fa-sync"></i> Test Connection
+                    </button>
+                </div>
+                <div class="console-log">
+                    <h3>Console Log</h3>
+                    <div class="log-tabs">
+                        <button class="log-tab active" data-tab="sent">→ Sent to DMS</button>
+                        <button class="log-tab" data-tab="received">← Received from DMS</button>
+                    </div>
+                    <div class="log-content" id="logContent">
+                        <!-- Logs will be dynamically inserted here -->
+                    </div>
+                </div>
+                
+                <div class="service-logs">
+                    <div class="service-logs-header">
+                        <h3>Service Execution Logs</h3>
+                        <div class="service-logs-controls">
+                            <button class="btn btn-small" id="clearServiceLogs" title="Clear logs">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                            <select id="serviceLogFilter" class="log-filter">
+                                <option value="all">All Services</option>
+                                <option value="API">API</option>
+                                <option value="DMS_SEND">DMS Send</option>
+                                <option value="DMS_CALLBACK">DMS Callback</option>
+                                <option value="WEBHOOK">Webhook</option>
+                                <option value="MESSAGE_STORAGE">Message Storage</option>
+                                <option value="API_CONFIG">Config</option>
+                                <option value="API_PING">Ping</option>
+                                <option value="API_LOGS">Logs</option>
+                            </select>
+                            <select id="logLevelFilter" class="log-filter">
+                                <option value="all">All Levels</option>
+                                <option value="info">Info</option>
+                                <option value="warn">Warning</option>
+                                <option value="error">Error</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="service-logs-content" id="serviceLogsContent">
+                        <!-- Service logs will be dynamically inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>Chat Session</h2>
+                <div class="chat-actions">
+                    <button class="btn clear-chat">
+                        <i class="fas fa-broom"></i> Clear Chat
+                    </button>
+                    <button class="btn end-session">End Session</button>
+                    <button class="btn simulate-csr">Simulate CSR Response</button>
+                </div>
+            </div>
+            
+            <div class="messages-container" id="messagesContainer">
+                <div class="chat-status">Chat session started. Send a message to begin.</div>
+                <!-- Messages will be dynamically inserted here -->
+            </div>
+            
+            <div class="input-container">
+                <div class="message-type-selector">
+                    <label for="messageType">Message Type:</label>
+                    <select id="messageType" class="message-type-dropdown">
+                        <option value="text">Text Message</option>
+                        <option value="text_with_attachment">Text + Attachment</option>
+                        <option value="text_with_context">Text + Context Data</option>
+                        <option value="menu_postback">Menu Selection (Postback)</option>
+                        <option value="typing_indicator">Typing Indicator</option>
+                        <option value="customer_end_session">End Session</option>
+                    </select>
+                </div>
+                <div class="input-row">
+                    <input type="text" id="messageInput" placeholder="Type your message here...">
+                    <button class="btn send-message" id="sendButton">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                    <button class="btn send-advanced" id="sendAdvancedButton" title="Send with selected message type">
+                        <i class="fas fa-cogs"></i>
+                    </button>
+                </div>
+                <div class="typing-indicator">
+                    <label for="typingCheckbox">
+                        <input type="checkbox" id="typingCheckbox"> Show Typing
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 
