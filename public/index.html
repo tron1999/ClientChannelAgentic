@@ -141,6 +141,28 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Expandable API Logging Panel -->
+        <div class="api-log-panel" id="apiLogPanel">
+            <div class="api-log-header" id="apiLogHeader">
+                <div class="api-log-header-content">
+                    <i class="fas fa-code"></i>
+                    <span>API Execution Logs</span>
+                    <span class="api-log-count" id="apiLogCount">0</span>
+                </div>
+                <div class="api-log-controls">
+                    <button class="btn-icon" id="clearApiLogs" title="Clear logs">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="btn-icon" id="toggleApiLogPanel" title="Toggle panel">
+                        <i class="fas fa-chevron-right" id="apiLogToggleIcon"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="api-log-content" id="apiLogContent">
+                <div class="api-log-empty">No API calls yet. API execution logs will appear here.</div>
+            </div>
+        </div>
     </div>
 
     <script src="app.js"></script>

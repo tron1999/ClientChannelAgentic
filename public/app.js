@@ -24,6 +24,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearServiceLogsButton = document.getElementById('clearServiceLogs');
     const serviceLogFilter = document.getElementById('serviceLogFilter');
     const logLevelFilter = document.getElementById('logLevelFilter');
+    
+    // API Log Panel elements
+    const apiLogPanel = document.getElementById('apiLogPanel');
+    const apiLogHeader = document.getElementById('apiLogHeader');
+    const apiLogContent = document.getElementById('apiLogContent');
+    const apiLogCount = document.getElementById('apiLogCount');
+    const toggleApiLogPanel = document.getElementById('toggleApiLogPanel');
+    const clearApiLogs = document.getElementById('clearApiLogs');
+    const apiLogToggleIcon = document.getElementById('apiLogToggleIcon');
+    
+    // API Logging state
+    const apiLogs = [];
+    const MAX_API_LOGS = 100;
 
     // Application state
     let customerId = ''; // Will be loaded from config, no longer random
@@ -50,6 +63,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Setup event listeners
         setupEventListeners();
+        
+        // Setup API logging interceptor
+        setupApiLogging();
+        
+        // Setup API log panel
+        setupApiLogPanel();
         
         // Update input placeholder based on default message type
         updateInputPlaceholder();
@@ -268,6 +287,324 @@ document.addEventListener('DOMContentLoaded', () => {
         if (logLevelFilter) {
             logLevelFilter.addEventListener('change', refreshServiceLogs);
         }
+        
+        // API Log Panel controls
+        if (apiLogHeader) {
+            apiLogHeader.addEventListener('click', () => {
+                if (!apiLogPanel.classList.contains('expanded')) {
+                    toggleApiLogPanelExpanded();
+                }
+            });
+        }
+        
+        if (toggleApiLogPanel) {
+            toggleApiLogPanel.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleApiLogPanelExpanded();
+            });
+        }
+        
+        if (clearApiLogs) {
+            clearApiLogs.addEventListener('click', (e) => {
+                e.stopPropagation();
+                clearApiLogsList();
+            });
+        }
+    }
+    
+    // Setup API Logging Interceptor
+    function setupApiLogging() {
+        // Store original fetch
+        const originalFetch = window.fetch;
+        
+        // Override fetch to intercept API calls
+        window.fetch = async function(...args) {
+            const [url, options = {}] = args;
+            const method = options.method || 'GET';
+            const startTime = performance.now();
+            const timestamp = new Date().toISOString();
+            
+            // Create log entry
+            const logEntry = {
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                timestamp: timestamp,
+                method: method,
+                url: url,
+                requestHeaders: options.headers || {},
+                requestBody: options.body || null,
+                status: 'pending',
+                responseHeaders: {},
+                responseBody: null,
+                duration: null,
+                error: null,
+                expanded: false
+            };
+            
+            // Add to logs
+            addApiLog(logEntry);
+            
+            try {
+                // Make the actual fetch call
+                const response = await originalFetch.apply(this, args);
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+                
+                // Clone response to read body without consuming it
+                const responseClone = response.clone();
+                
+                // Try to parse response body
+                let responseBody = null;
+                const contentType = response.headers.get('content-type');
+                try {
+                    if (contentType && contentType.includes('application/json')) {
+                        responseBody = await responseClone.json();
+                    } else {
+                        const text = await responseClone.text();
+                        responseBody = text.length > 1000 ? text.substring(0, 1000) + '... (truncated)' : text;
+                    }
+                } catch (e) {
+                    responseBody = '[Unable to parse response]';
+                }
+                
+                // Collect response headers
+                const responseHeaders = {};
+                response.headers.forEach((value, key) => {
+                    responseHeaders[key] = value;
+                });
+                
+                // Update log entry
+                logEntry.status = response.ok ? 'success' : 'error';
+                logEntry.statusCode = response.status;
+                logEntry.statusText = response.statusText;
+                logEntry.responseHeaders = responseHeaders;
+                logEntry.responseBody = responseBody;
+                logEntry.duration = duration;
+                
+                updateApiLog(logEntry);
+                
+                return response;
+            } catch (error) {
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+                
+                logEntry.status = 'error';
+                logEntry.error = error.message;
+                logEntry.duration = duration;
+                
+                updateApiLog(logEntry);
+                
+                throw error;
+            }
+        };
+    }
+    
+    // Setup API Log Panel
+    function setupApiLogPanel() {
+        // Check if panel should be expanded (from localStorage)
+        const appContainer = document.querySelector('.app-container');
+        const savedState = localStorage.getItem('apiLogPanelExpanded');
+        if (savedState === 'true') {
+            apiLogPanel.classList.add('expanded');
+            appContainer.classList.add('api-log-expanded');
+            apiLogToggleIcon.classList.add('fa-chevron-left');
+            apiLogToggleIcon.classList.remove('fa-chevron-right');
+        }
+    }
+    
+    // Toggle API Log Panel
+    function toggleApiLogPanelExpanded() {
+        const appContainer = document.querySelector('.app-container');
+        const isExpanded = apiLogPanel.classList.contains('expanded');
+        
+        if (isExpanded) {
+            apiLogPanel.classList.remove('expanded');
+            appContainer.classList.remove('api-log-expanded');
+            apiLogToggleIcon.classList.remove('fa-chevron-left');
+            apiLogToggleIcon.classList.add('fa-chevron-right');
+            localStorage.setItem('apiLogPanelExpanded', 'false');
+        } else {
+            apiLogPanel.classList.add('expanded');
+            appContainer.classList.add('api-log-expanded');
+            apiLogToggleIcon.classList.remove('fa-chevron-right');
+            apiLogToggleIcon.classList.add('fa-chevron-left');
+            localStorage.setItem('apiLogPanelExpanded', 'true');
+        }
+    }
+    
+    // Add API Log Entry
+    function addApiLog(logEntry) {
+        apiLogs.push(logEntry);
+        
+        // Keep only last MAX_API_LOGS entries
+        if (apiLogs.length > MAX_API_LOGS) {
+            apiLogs.shift();
+        }
+        
+        updateApiLogCount();
+        renderApiLogs();
+    }
+    
+    // Update API Log Entry
+    function updateApiLog(logEntry) {
+        const index = apiLogs.findIndex(log => log.id === logEntry.id);
+        if (index !== -1) {
+            apiLogs[index] = logEntry;
+            renderApiLogs();
+        }
+    }
+    
+    // Update API Log Count
+    function updateApiLogCount() {
+        if (apiLogCount) {
+            apiLogCount.textContent = apiLogs.length;
+        }
+    }
+    
+    // Clear API Logs
+    function clearApiLogsList() {
+        if (confirm('Clear all API execution logs?')) {
+            apiLogs.length = 0;
+            updateApiLogCount();
+            renderApiLogs();
+        }
+    }
+    
+    // Render API Logs
+    function renderApiLogs() {
+        if (!apiLogContent) return;
+        
+        if (apiLogs.length === 0) {
+            apiLogContent.innerHTML = '<div class="api-log-empty">No API calls yet. API execution logs will appear here.</div>';
+            return;
+        }
+        
+        // Render logs in reverse order (newest first)
+        const logsHtml = apiLogs.slice().reverse().map(log => {
+            const isExpanded = log.expanded;
+            const statusClass = log.status === 'success' ? 'success' : log.status === 'error' ? 'error' : 'pending';
+            const statusCode = log.statusCode || '...';
+            const statusText = log.statusText || '';
+            
+            // Format request body
+            let requestBodyDisplay = '';
+            if (log.requestBody) {
+                try {
+                    const parsed = typeof log.requestBody === 'string' ? JSON.parse(log.requestBody) : log.requestBody;
+                    requestBodyDisplay = JSON.stringify(parsed, null, 2);
+                } catch (e) {
+                    requestBodyDisplay = log.requestBody;
+                }
+            }
+            
+            // Format response body
+            let responseBodyDisplay = '';
+            if (log.responseBody) {
+                if (typeof log.responseBody === 'string') {
+                    try {
+                        const parsed = JSON.parse(log.responseBody);
+                        responseBodyDisplay = JSON.stringify(parsed, null, 2);
+                    } catch (e) {
+                        responseBodyDisplay = log.responseBody;
+                    }
+                } else {
+                    responseBodyDisplay = JSON.stringify(log.responseBody, null, 2);
+                }
+            }
+            
+            // Format headers
+            const requestHeadersHtml = Object.entries(log.requestHeaders).map(([key, value]) => 
+                `<div class="api-log-header-key">${key}:</div><div class="api-log-header-value">${value}</div>`
+            ).join('');
+            
+            const responseHeadersHtml = Object.entries(log.responseHeaders).map(([key, value]) => 
+                `<div class="api-log-header-key">${key}:</div><div class="api-log-header-value">${value}</div>`
+            ).join('');
+            
+            return `
+                <div class="api-log-entry ${isExpanded ? 'expanded' : ''}" data-log-id="${log.id}">
+                    <div class="api-log-entry-header" onclick="toggleApiLogEntry('${log.id}')">
+                        <div class="api-log-entry-header-left">
+                            <span class="api-log-method ${log.method}">${log.method}</span>
+                            <span class="api-log-url">${log.url}</span>
+                            ${log.status !== 'pending' ? `<span class="api-log-status ${statusClass}">${statusCode} ${statusText}</span>` : ''}
+                            ${log.duration !== null ? `<span class="api-log-duration">${log.duration}ms</span>` : ''}
+                        </div>
+                        <div>
+                            <span class="api-log-timestamp">${new Date(log.timestamp).toLocaleTimeString()}</span>
+                            <i class="fas fa-chevron-right api-log-toggle ${isExpanded ? 'expanded' : ''}"></i>
+                        </div>
+                    </div>
+                    <div class="api-log-details">
+                        ${requestHeadersHtml ? `
+                            <div class="api-log-section">
+                                <div class="api-log-section-title">
+                                    <i class="fas fa-arrow-up"></i> Request Headers
+                                </div>
+                                <div class="api-log-section-content api-log-headers">
+                                    ${requestHeadersHtml}
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${requestBodyDisplay ? `
+                            <div class="api-log-section">
+                                <div class="api-log-section-title">
+                                    <i class="fas fa-paper-plane"></i> Request Body
+                                </div>
+                                <div class="api-log-section-content api-log-json">
+                                    ${escapeHtml(requestBodyDisplay)}
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${responseHeadersHtml ? `
+                            <div class="api-log-section">
+                                <div class="api-log-section-title">
+                                    <i class="fas fa-arrow-down"></i> Response Headers
+                                </div>
+                                <div class="api-log-section-content api-log-headers">
+                                    ${responseHeadersHtml}
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${responseBodyDisplay ? `
+                            <div class="api-log-section">
+                                <div class="api-log-section-title">
+                                    <i class="fas fa-inbox"></i> Response Body
+                                </div>
+                                <div class="api-log-section-content api-log-json">
+                                    ${escapeHtml(responseBodyDisplay)}
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${log.error ? `
+                            <div class="api-log-error">
+                                <strong>Error:</strong> ${escapeHtml(log.error)}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        apiLogContent.innerHTML = logsHtml;
+        
+        // Scroll to top to show newest logs
+        apiLogContent.scrollTop = 0;
+    }
+    
+    // Toggle API Log Entry (exposed globally for onclick)
+    window.toggleApiLogEntry = function(logId) {
+        const log = apiLogs.find(l => l.id === logId);
+        if (log) {
+            log.expanded = !log.expanded;
+            renderApiLogs();
+        }
+    };
+    
+    // Escape HTML helper
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
     
     // Refresh service execution logs
@@ -373,7 +710,93 @@ document.addEventListener('DOMContentLoaded', () => {
                 showError('Error clearing service logs: ' + error.message);
             });
     }
-
+    
+    // Setup API Logging Interceptor
+    function setupApiLogging() {
+        // Store original fetch
+        const originalFetch = window.fetch;
+        
+        // Override fetch to intercept API calls
+        window.fetch = async function(...args) {
+            const [url, options = {}] = args;
+            const method = options.method || 'GET';
+            const startTime = performance.now();
+            const timestamp = new Date().toISOString();
+            
+            // Create log entry
+            const logEntry = {
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                timestamp: timestamp,
+                method: method,
+                url: url,
+                requestHeaders: options.headers || {},
+                requestBody: options.body || null,
+                status: 'pending',
+                responseHeaders: {},
+                responseBody: null,
+                duration: null,
+                error: null,
+                expanded: false
+            };
+            
+            // Add to logs
+            addApiLog(logEntry);
+            
+            try {
+                // Make the actual fetch call
+                const response = await originalFetch.apply(this, args);
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+                
+                // Clone response to read body without consuming it
+                const responseClone = response.clone();
+                
+                // Try to parse response body
+                let responseBody = null;
+                const contentType = response.headers.get('content-type');
+                try {
+                    if (contentType && contentType.includes('application/json')) {
+                        responseBody = await responseClone.json();
+                    } else {
+                        const text = await responseClone.text();
+                        responseBody = text.length > 1000 ? text.substring(0, 1000) + '... (truncated)' : text;
+                    }
+                } catch (e) {
+                    responseBody = '[Unable to parse response]';
+                }
+                
+                // Collect response headers
+                const responseHeaders = {};
+                response.headers.forEach((value, key) => {
+                    responseHeaders[key] = value;
+                });
+                
+                // Update log entry
+                logEntry.status = response.ok ? 'success' : 'error';
+                logEntry.statusCode = response.status;
+                logEntry.statusText = response.statusText;
+                logEntry.responseHeaders = responseHeaders;
+                logEntry.responseBody = responseBody;
+                logEntry.duration = duration;
+                
+                updateApiLog(logEntry);
+                
+                return response;
+            } catch (error) {
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+                
+                logEntry.status = 'error';
+                logEntry.error = error.message;
+                logEntry.duration = duration;
+                
+                updateApiLog(logEntry);
+                
+                throw error;
+            }
+        };
+    }
+    
     // Save configuration to server and localStorage
     function saveConfiguration() {
         // Always use the auto-generated webhook URL based on the current origin
