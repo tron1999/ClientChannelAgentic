@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clientWebhookUrlInput = document.getElementById('clientWebhookUrl');
     const apiUrlInput = document.getElementById('apiUrl');
     const customerIdInput = document.getElementById('customerId');
+    const customerEmailInput = document.getElementById('customerEmail');
     const messageInput = document.getElementById('messageInput');
     const sendButton = document.getElementById('sendButton');
     const sendAdvancedButton = document.getElementById('sendAdvancedButton');
@@ -46,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Application state
     let customerId = ''; // Will be loaded from config, no longer random
+    let customerEmail = ''; // Customer email address
     let activeLogTab = 'sent'; // Default to sent tab
     let isConnected = false;
     let activeChatSession = true;
@@ -121,6 +123,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 customerIdInput.value = defaultCustomerId;
                 customerId = defaultCustomerId;
                 console.log('Generated new Customer ID:', customerId);
+            }
+            
+            // Handle Customer Email
+            if (savedConfig.customerEmail) {
+                customerEmailInput.value = savedConfig.customerEmail;
+                customerEmail = savedConfig.customerEmail;
+                console.log('Loaded Customer Email from saved config:', customerEmail);
             }
             
             // Always set the webhook URL based on the current origin
@@ -855,7 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
     }
-    
+
     // Save configuration to server and localStorage
     function saveConfiguration() {
         // Always use the auto-generated webhook URL based on the current origin
@@ -872,12 +881,16 @@ document.addEventListener('DOMContentLoaded', () => {
             showStatus(`Generated a random Customer ID: ${customerId}`);
         }
         
+        // Update the global customerEmail with the input value
+        customerEmail = customerEmailInput ? customerEmailInput.value.trim() : '';
+        
         const config = {
             connectionId: connectionIdInput.value.trim(),
             jwtSecret: jwtSecretInput.value.trim(),
             clientWebhookUrl: webhookUrl, // Always use the auto-generated URL
             apiUrl: apiUrlInput.value.trim(),
-            customerId: customerId // Save the customer ID
+            customerId: customerId, // Save the customer ID
+            customerEmail: customerEmail // Save the customer email
         };
         
         // Save to localStorage
@@ -991,7 +1004,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 customerId,
                 messageId,
                 text,
-                customerName: 'You'
+                customerName: 'You',
+                customerEmail: customerEmail || undefined
             })
         })
         .then(response => response.json())
@@ -1563,6 +1577,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     message_id: messageId,
                     text: [text]
                 };
+                if (customerEmail) {
+                    payload.customer_email = customerEmail;
+                }
                 displayText = text;
                 break;
                 
@@ -1583,6 +1600,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     ]
                 };
+                if (customerEmail) {
+                    payload.customer_email = customerEmail;
+                }
                 displayText = `${text} (with attachment: sample-document.pdf)`;
                 break;
                 
@@ -1603,6 +1623,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         user_agent: navigator.userAgent
                     }
                 };
+                if (customerEmail) {
+                    payload.customer_email = customerEmail;
+                }
                 displayText = `${text} (with context data)`;
                 break;
                 
@@ -1618,6 +1641,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     message_id: messageId,
                     postback: text
                 };
+                if (customerEmail) {
+                    payload.customer_email = customerEmail;
+                }
                 displayText = `Menu selection: ${text}`;
                 break;
                 
@@ -1626,6 +1652,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     type: 'typing_indicator',
                     customer_id: customerId
                 };
+                if (customerEmail) {
+                    payload.customer_email = customerEmail;
+                }
                 displayText = 'Typing indicator sent';
                 break;
                 
@@ -1634,6 +1663,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     type: 'customer_end_session',
                     customer_id: customerId
                 };
+                if (customerEmail) {
+                    payload.customer_email = customerEmail;
+                }
                 displayText = 'Customer ended session';
                 break;
                 
@@ -1669,6 +1701,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 messageId: payload.message_id || messageId,
                 text: payload.text || [displayText],
                 customerName: payload.customer_name || 'Test Customer',
+                customerEmail: customerEmail || undefined,
                 // Include the full payload for advanced processing
                 advancedPayload: payload
             })
@@ -1724,7 +1757,7 @@ document.addEventListener('DOMContentLoaded', () => {
         messageInput.placeholder = placeholders[messageType] || 'Type your message here...';
         
         // Keep input always enabled - user can always type
-        messageInput.disabled = false;
-        messageInput.style.opacity = '1';
+            messageInput.disabled = false;
+            messageInput.style.opacity = '1';
     }
 }); 

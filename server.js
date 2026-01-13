@@ -147,9 +147,9 @@ dms.onTextMessage = async (message) => {
   );
   
   try {
-    // If this message has a message_id, mark it as delivered
-    if (message && message.message_id) {
-      pendingMessages.set(message.message_id, 'delivered');
+  // If this message has a message_id, mark it as delivered
+  if (message && message.message_id) {
+    pendingMessages.set(message.message_id, 'delivered');
       logServiceExecution(
         'DMS_CALLBACK',
         'onTextMessage',
@@ -159,9 +159,9 @@ dms.onTextMessage = async (message) => {
           data: { message_id: message.message_id }
         }
       );
-    }
-    
-    // Store incoming messages to be fetched by clients
+  }
+  
+  // Store incoming messages to be fetched by clients
     const stored = storeIncomingMessage(message);
     const duration = Date.now() - startTime;
     
@@ -203,11 +203,11 @@ dms.onRichContentMessage = async (message) => {
   );
   
   try {
-    // If this message has a message_id, mark it as delivered
-    if (message && message.message_id) {
-      pendingMessages.set(message.message_id, 'delivered');
-    }
-    
+  // If this message has a message_id, mark it as delivered
+  if (message && message.message_id) {
+    pendingMessages.set(message.message_id, 'delivered');
+  }
+  
     const stored = storeIncomingMessage(message);
     const duration = Date.now() - startTime;
     
@@ -249,10 +249,10 @@ dms.onUrlLinkMessage = async (message) => {
   );
   
   try {
-    if (message && message.message_id) {
-      pendingMessages.set(message.message_id, 'delivered');
-    }
-    
+  if (message && message.message_id) {
+    pendingMessages.set(message.message_id, 'delivered');
+  }
+  
     const stored = storeIncomingMessage(message);
     const duration = Date.now() - startTime;
     
@@ -294,12 +294,12 @@ dms.onTypingIndicator = async (customerId) => {
   );
   
   try {
-    // Store typing indicator event
-    incomingMessages.push({
-      type: 'typing_indicator',
-      customer_id: customerId,
-      timestamp: new Date().toISOString()
-    });
+  // Store typing indicator event
+  incomingMessages.push({
+    type: 'typing_indicator',
+    customer_id: customerId,
+    timestamp: new Date().toISOString()
+  });
     
     const duration = Date.now() - startTime;
     logServiceExecution(
@@ -340,12 +340,12 @@ dms.onCsrEndSession = async (customerId) => {
   );
   
   try {
-    // Store end session event
-    incomingMessages.push({
-      type: 'end_session',
-      customer_id: customerId,
-      timestamp: new Date().toISOString()
-    });
+  // Store end session event
+  incomingMessages.push({
+    type: 'end_session',
+    customer_id: customerId,
+    timestamp: new Date().toISOString()
+  });
     
     const duration = Date.now() - startTime;
     logServiceExecution(
@@ -387,10 +387,10 @@ dms.onMenuMessage = async (message) => {
   );
   
   try {
-    if (message && message.message_id) {
-      pendingMessages.set(message.message_id, 'delivered');
-    }
-    
+  if (message && message.message_id) {
+    pendingMessages.set(message.message_id, 'delivered');
+  }
+  
     const stored = storeIncomingMessage(message);
     const duration = Date.now() - startTime;
     
@@ -577,7 +577,7 @@ function storeIncomingMessage(message) {
 // API endpoint to send messages
 app.post('/api/messages', (req, res) => {
   const startTime = Date.now();
-  const { customerId, messageId, text, customerName, advancedPayload } = req.body;
+  const { customerId, messageId, text, customerName, customerEmail, advancedPayload } = req.body;
   
   logServiceExecution(
     'API_MESSAGES',
@@ -631,6 +631,11 @@ app.post('/api/messages', (req, res) => {
     }
     if (!messageObject.timestamp) messageObject.timestamp = new Date().toISOString();
     
+    // Add customer email if provided (from request or advanced payload)
+    if (customerEmail && !messageObject.customer_email) {
+      messageObject.customer_email = customerEmail;
+    }
+    
   } else {
     // Standard text message (backward compatibility)
     if (!text) {
@@ -645,6 +650,11 @@ app.post('/api/messages', (req, res) => {
       customer_name: customerName || 'Customer',
       timestamp: new Date().toISOString()
     };
+    
+    // Add customer email if provided
+    if (customerEmail) {
+      messageObject.customer_email = customerEmail;
+    }
   }
   
   logServiceExecution(
