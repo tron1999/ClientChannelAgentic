@@ -665,6 +665,7 @@ app.post('/api/messages', (req, res) => {
       message: 'Sending message to DMS',
       data: {
         customer_id: messageObject.customer_id,
+        customer_email: messageObject.customer_email || 'NOT SET',
         message_id: messageObject.message_id,
         message_type: messageObject.type,
         webhook_url: DMS_CONFIG.WEBHOOK_URL || 'NOT SET',

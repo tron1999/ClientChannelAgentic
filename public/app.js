@@ -979,6 +979,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Log message sending attempt
         console.log(`Sending message: ${messageId} - "${text}"`);
         console.log(`Using Customer ID: ${customerId}`);
+        console.log(`Using Customer Email: ${customerEmail || 'NOT SET'}`);
         
         // Add message to UI immediately (optimistic UI update)
         addMessageToUI({
@@ -1688,6 +1689,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         console.log(`Sending ${messageType} payload:`, JSON.stringify(payload, null, 2));
+        console.log(`Customer Email in payload: ${customerEmail || 'NOT SET'}`);
         
         // Add message to UI immediately (optimistic UI update) - except for typing indicator
         if (messageType !== 'typing_indicator') {
