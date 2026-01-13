@@ -130,6 +130,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 customerEmailInput.value = savedConfig.customerEmail;
                 customerEmail = savedConfig.customerEmail;
                 console.log('Loaded Customer Email from saved config:', customerEmail);
+            } else {
+                // Set default customer email
+                const defaultCustomerEmail = 'sheaparker-35@mail.pegatsdemo.com';
+                customerEmailInput.value = defaultCustomerEmail;
+                customerEmail = defaultCustomerEmail;
+                console.log('Set default Customer Email:', customerEmail);
             }
             
             // Always set the webhook URL based on the current origin
@@ -149,6 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 customerIdInput.value = defaultCustomerId;
                 customerId = defaultCustomerId;
                 console.log('Generated emergency Customer ID:', customerId);
+            }
+            // Set default customer email if not already set
+            if (!customerEmailInput.value) {
+                const defaultCustomerEmail = 'sheaparker-35@mail.pegatsdemo.com';
+                customerEmailInput.value = defaultCustomerEmail;
+                customerEmail = defaultCustomerEmail;
+                console.log('Set default Customer Email:', customerEmail);
             }
         }
     }
