@@ -100,6 +100,26 @@ body {
     margin-right: 10px;
 }
 
+.layout-toggle {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.layout-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.layout-toggle.active {
+    background: rgba(255, 255, 255, 0.4);
+}
+
 .sidebar-content {
     padding: 20px;
     flex: 1;
@@ -499,6 +519,63 @@ body {
                 inset 0 2px 4px rgba(0, 0, 0, 0.3);
     position: relative;
     overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Samsung Fold Layout - Narrow and Tall */
+.iphone-frame.fold-layout {
+    max-width: 280px;
+    min-width: 280px;
+    height: 884px;
+    border-radius: 32px;
+}
+
+.iphone-frame.fold-layout .iphone-notch {
+    width: 100px;
+    height: 24px;
+}
+
+.iphone-frame.fold-layout .chat-header {
+    padding: 40px 10px 12px 10px;
+}
+
+.iphone-frame.fold-layout .chat-header h2 {
+    font-size: 1rem;
+}
+
+.iphone-frame.fold-layout .chat-actions .btn {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+}
+
+.iphone-frame.fold-layout .message {
+    max-width: 80%;
+    font-size: 14px;
+    padding: 8px 12px;
+}
+
+.iphone-frame.fold-layout .input-container {
+    padding: 8px 10px 15px 10px;
+}
+
+.iphone-frame.fold-layout #messageInput {
+    font-size: 14px;
+    padding: 8px 12px;
+}
+
+.iphone-frame.fold-layout .message-type-selector {
+    font-size: 0.75rem;
+}
+
+.iphone-frame.fold-layout .message-type-dropdown {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+}
+
+.iphone-frame.fold-layout .send-message,
+.iphone-frame.fold-layout .send-advanced {
+    padding: 8px 12px;
+    font-size: 14px;
 }
 
 .iphone-notch {
@@ -1218,9 +1295,10 @@ body {
     transition: margin-right 0.3s ease;
 }
 
-/* Adjust iPhone frame when sidebar is collapsed */
+/* Center iPhone frame when sidebar is collapsed */
 .app-container:has(.sidebar.collapsed) .iphone-frame {
-    margin-left: 0;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Responsive adjustments for iPhone frame */

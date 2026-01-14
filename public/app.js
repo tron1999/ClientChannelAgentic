@@ -41,6 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarToggleMobile = document.getElementById('sidebarToggleMobile');
     const sidebarToggleIcon = document.getElementById('sidebarToggleIcon');
     
+    // Layout toggle elements
+    const layoutToggle = document.getElementById('layoutToggle');
+    const chatFrame = document.getElementById('chatFrame');
+    
     // API Logging state
     const apiLogs = [];
     const MAX_API_LOGS = 100;
@@ -80,6 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Setup sidebar panel
         setupSidebarPanel();
+        
+        // Setup phone layout
+        setupPhoneLayout();
         
         // Update input placeholder based on default message type
         updateInputPlaceholder();
@@ -356,6 +363,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 toggleSidebar();
             });
         }
+        
+        // Layout toggle control
+        if (layoutToggle) {
+            layoutToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                togglePhoneLayout();
+            });
+        }
     }
     
     // Toggle Sidebar
@@ -381,6 +396,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // Toggle Phone Layout (iPhone vs Samsung Fold)
+    function togglePhoneLayout() {
+        if (!chatFrame || !layoutToggle) return;
+        
+        const isFoldLayout = chatFrame.classList.contains('fold-layout');
+        
+        if (isFoldLayout) {
+            // Switch to iPhone layout
+            chatFrame.classList.remove('fold-layout');
+            layoutToggle.classList.remove('active');
+            layoutToggle.title = 'Switch to Samsung Fold layout';
+            localStorage.setItem('phoneLayout', 'iphone');
+        } else {
+            // Switch to Samsung Fold layout
+            chatFrame.classList.add('fold-layout');
+            layoutToggle.classList.add('active');
+            layoutToggle.title = 'Switch to iPhone layout';
+            localStorage.setItem('phoneLayout', 'fold');
+        }
+    }
+    
     // Setup Sidebar Panel
     function setupSidebarPanel() {
         const savedState = localStorage.getItem('sidebarCollapsed');
@@ -390,6 +426,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 sidebarToggleIcon.classList.remove('fa-chevron-left');
                 sidebarToggleIcon.classList.add('fa-chevron-right');
             }
+        }
+    }
+    
+    // Setup Phone Layout
+    function setupPhoneLayout() {
+        const savedLayout = localStorage.getItem('phoneLayout');
+        if (savedLayout === 'fold' && chatFrame && layoutToggle) {
+            chatFrame.classList.add('fold-layout');
+            layoutToggle.classList.add('active');
+            layoutToggle.title = 'Switch to iPhone layout';
         }
     }
     
